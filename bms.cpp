@@ -1,7 +1,8 @@
 INCLUDE Irvine32.inc
 
 .data
-
+lineNo BYTE 1
+outputLine BYTE ?
 filename BYTE "BLOOD.txt",0
 BUFFER_SIZE = 5000
 buffer BYTE BUFFER_SIZE DUP(?)
@@ -20,11 +21,33 @@ choi byte ?
  stringN byte "Enter Your name : ",0h
  stringB byte "ENter Blood Type : ",0h
  StringA byte "Enter Amount of blood you want to donate : ",0h 
-ArrName dword dup(?)
-len=($-ArrName)/4
+;ArrName dword dup(?)
+;len=($-ArrName)/4
 .code
 
 getLine PROTO, line:DWORD, inputStr:PTR BYTE, outputStr:PTR BYTE
+;it counts the total lines read from file :returns value in ECX
+lineCounter proc uses esi 
+
+LOCAL  current :byte
+
+mov esi,offset buffer
+mov ecx,0
+
+mov eax,[esi]
+mov current,al
+
+.while current != 000h
+.if current==0ah
+inc ecx
+.endif
+inc esi
+mov eax,[esi]
+mov current,al
+.endw
+
+ret
+lineCounter endp
 
 main PROC
 mov edx,offset space
@@ -56,13 +79,14 @@ call crlf
 call crlf
 call crlf
 mov edx,offset choice 
-call writestring  
-mov choi,al
+call writestring
 call readint
+mov choi,al
+
 cmp choi ,2
 jl L1
-jg L2
-Je L3
+;jg L2
+;Je L3
 
 L1:
 call crlf
@@ -86,7 +110,9 @@ call writestring
 	MOV ecx,BUFFER_SIZE
 	CALL ReadFromFile
 
-	INVOKE getLine, 1, ADDR buffer, ADDR str1
+	INVOKE getLine, lineno, ADDR buffer, ADDR outputline
+	mov edx,offset outputline
+	call writestring 
 
 	MOV edx,OFFSET str1
 	CALL WriteString
@@ -107,7 +133,7 @@ getLine PROC uses eax ebx esi, line:DWORD, inputStr:PTR BYTE, outputStr:PTR BYTE
 	MOV currChar,al
 
 	.WHILE currChar != 000h
-		.WHILE currChar != '#'
+		.WHILE currChar != 00dh
 		;check if the line is desired line then start copying characters until 00dh appears
 			MOV eax,line
 			.IF lineCount == eax
@@ -131,7 +157,7 @@ getLine PROC uses eax ebx esi, line:DWORD, inputStr:PTR BYTE, outputStr:PTR BYTE
 		MOV al,[ebx]
 		MOV currChar,al
 	.ENDW
+	mov linecount,1
 	RET
 getLine ENDP
-End Main
-
+End Main 
